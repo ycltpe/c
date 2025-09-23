@@ -12,6 +12,7 @@ import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
 import { withBase } from 'vitepress';
+import googleAnalytics from 'vitepress-plugin-google-analytics'
 
 export default {
   extends: DefaultTheme,
@@ -25,6 +26,9 @@ export default {
     // 注册 Swiper 组件
     app.component('Swiper', Swiper);
     app.component('SwiperSlide', SwiperSlide);
+    googleAnalytics({
+      id: 'G-Y4YQJG6DEF'  // 你的GA ID
+    })
   },
   Layout() {
     return h(DefaultTheme.Layout, null, {

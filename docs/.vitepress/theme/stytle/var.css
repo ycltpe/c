@@ -1,0 +1,7 @@
+/* .vitepress/theme/style/var.css */
+
+/* Swiper自定义样式变量 */
+:root {
+  --swiper-theme-color: #007aff;
+  --swiper-navigation-size: 24px;
+}

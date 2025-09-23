@@ -1,0 +1,86 @@
+# 定时刷新图片并部署的工作流程
+name: Scheduled Refresh and Deploy
+
+on:
+  # 每天6点到22点之间每一个小时执行一次
+  schedule:
+    # 每30分钟执行一次，从6:00到22:30 (UTC时间)
+    # 注意：GitHub Actions使用UTC时间，需要根据你的时区调整
+    - cron: '0 6-22 * * *'
+  # 允许手动触发
+  workflow_dispatch:
+
+# 设置权限
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+# 只允许同时进行一次部署
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  refresh-and-deploy:
+    runs-on: ubuntu-latest
+    environment: wg
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: latest
+      
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Setup WireGuard
+        uses: egor-tensin/setup-wireguard@v1
+        with:
+          endpoint: ${{ secrets.ENDPOINT }}
+          endpoint_public_key: ${{ secrets.PUBLIC_KEY }}
+          ips: 10.8.0.7/24
+          allowed_ips: 192.168.31.0/24
+          private_key: ${{ secrets.PRIVATE_KEY }}
+          preshared_key: 3/nrA48JpenuTQTowObl2CS9SU10Wgc+A9kXXNfk9H8=
+      - name: Verify WireGuard Connection
+        run: |
+          sudo wg show
+          ping -c 4 192.168.31.63 || { echo "错误：无法 ping 通 192.168.31.63"; exit 1; }
+
+      - name: Install dependencies
+        run: pnpm install
+      
+      - name: Configure Git author
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Make refresh script executable
+        run: chmod +x refresh-picture-and-deplay.bash
+      
+      - name: Run refresh script
+        run: ./refresh-picture-and-deplay.bash
+      
+      - name: Build with VitePress
+        run: pnpm run docs:build
+      
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs/.vitepress/dist
+      
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

@@ -4,9 +4,9 @@ name: Scheduled Refresh and Deploy
 on:
   # 每天6点到22点之间每一个小时执行一次
   schedule:
-    # 每30分钟执行一次，从6:00到22:30 (UTC时间)
+    # 10点，12点，16点，22点执行 (UTC时间)
     # 注意：GitHub Actions使用UTC时间，需要根据你的时区调整
-    - cron: '0 6-22 * * *'
+    - cron: '0 2,4,8,14 * * *'
   # 允许手动触发
   workflow_dispatch:
 
